@@ -57,6 +57,16 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// ===== МОДЕЛЬ IMAGE ДО CAR =====
+model Image {
+  id        Int      @id @default(autoincrement())
+  url       String
+  carId     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+}
+
 model Car {
   id           Int        @id @default(autoincrement())
   brand        String
@@ -79,7 +89,7 @@ model Car {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   bookings     Booking[]
-  images       Image[]    // ← СВЯЗЬ С ИЗОБРАЖЕНИЯМИ
+  images       Image[]    // ← ТЕПЕРЬ МОДЕЛЬ Image СУЩЕСТВУЕТ
 }
 
 model Booking {
@@ -113,15 +123,6 @@ model Consultation {
   status    ConsultationStatus   @default(NEW)
   createdAt DateTime             @default(now())
   updatedAt DateTime             @updatedAt
-}
-
-model carImage {
-  id        Int      @id @default(autoincrement())
-  url       String
-  carId     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
 }
 
 enum Role {
