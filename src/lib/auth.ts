@@ -1,8 +1,9 @@
+// lib/auth.ts
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
-import Yandex from "next-auth/providers/yandex";
-import VK from "next-auth/providers/vk";
+// import Yandex from "next-auth/providers/yandex";
+// import VK from "next-auth/providers/vk";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
@@ -42,29 +43,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
-    ...(process.env.AUTH_YANDEX_ID
-      ? [
-          Yandex({
-            clientId: process.env.AUTH_YANDEX_ID,
-            clientSecret: process.env.AUTH_YANDEX_SECRET,
-          }),
-        ]
-      : []),
+    // Яндекс и VK временно отключены
+    // ...(process.env.AUTH_YANDEX_ID && process.env.AUTH_YANDEX_SECRET
+    //   ? [
+    //       Yandex({
+    //         clientId: process.env.AUTH_YANDEX_ID,
+    //         clientSecret: process.env.AUTH_YANDEX_SECRET,
+    //       }),
+    //     ]
+    //   : []),
   ],
-callbacks: {
-  async jwt({ token, user }) {
-    if (user) {
-      token.role = (user as { role?: string }).role || "USER";
-      token.id = user.id;
-    }
-    return token;
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = (user as { role?: string }).role || "USER";
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        (session.user as { role?: string }).role = token.role as string;
+      }
+      return session;
+    },
   },
-  async session({ session, token }) {
-    if (session.user) {
-      session.user.id = token.id as string;
-      (session.user as { role?: string }).role = token.role as string;
-    }
-    return session;
-  },
-},
 });
