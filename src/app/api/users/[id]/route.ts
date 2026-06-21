@@ -5,12 +5,11 @@ import { auth } from "@/lib/auth";
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
     const session = await auth();
     
-    // Проверяем авторизацию
     if (!session?.user) {
       return NextResponse.json(
         { error: "Не авторизован" },
@@ -18,7 +17,6 @@ export async function DELETE(
       );
     }
 
-    // Проверяем роль (только ADMIN)
     const userRole = (session.user as { role?: string }).role;
     if (userRole !== "ADMIN") {
       return NextResponse.json(
@@ -27,18 +25,11 @@ export async function DELETE(
       );
     }
 
-    // ПОЛУЧАЕМ ID ПРАВИЛЬНО
-    let id = context.params?.id;
+    // Правильно получаем params с поддержкой Promise
+    const params = await context.params;
+    const id = params.id;
     
-    // Если params.id undefined — пробуем из URL
-    if (!id) {
-      const url = new URL(request.url);
-      const pathParts = url.pathname.split('/');
-      id = pathParts[pathParts.length - 1];
-      console.log('ID из URL:', id);
-    }
-    
-    console.log("Удаление пользователя:", id);
+    console.log("🗑️ Удаление пользователя:", id);
 
     if (!id) {
       return NextResponse.json(
@@ -47,7 +38,6 @@ export async function DELETE(
       );
     }
 
-    // Нельзя удалить самого себя
     if (id === session.user.id) {
       return NextResponse.json(
         { error: "Нельзя удалить самого себя" },
@@ -55,7 +45,6 @@ export async function DELETE(
       );
     }
 
-    // Проверяем, существует ли пользователь
     const userExists = await prisma.user.findUnique({
       where: { id },
     });
@@ -67,24 +56,17 @@ export async function DELETE(
       );
     }
 
-    // Удаляем пользователя
     await prisma.user.delete({
       where: { id },
     });
 
-    console.log(`Пользователь ${id} удалён`);
+    console.log(`✅ Пользователь ${id} удалён`);
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error("Ошибка при удалении:", error);
-    
-    let errorMessage = "Ошибка при удалении пользователя";
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    }
-
+    console.error("❌ Ошибка при удалении:", error);
     return NextResponse.json(
-      { error: errorMessage },
+      { error: error instanceof Error ? error.message : "Ошибка при удалении" },
       { status: 500 }
     );
   }
