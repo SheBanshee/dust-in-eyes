@@ -70,7 +70,6 @@ export default function BookingModal({
     setValue,
     formState: { errors },
   } = useForm<FormData>({
-    // ✅ ОБХОДИМ ПРОВЕРКУ ТИПОВ
     resolver: zodResolver(schema) as any,
     defaultValues: {
       withDriver: false,
@@ -96,7 +95,8 @@ export default function BookingModal({
   const childSeat = watch("childSeat");
   const petTransport = watch("petTransport");
 
-  const getPetPrice = (pet: string): number => {
+  const getPetPrice = (pet: string | undefined): number => {
+    if (!pet) return 0;
     switch (pet) {
       case "small": return 1500;
       case "medium": return 2000;
@@ -374,10 +374,14 @@ export default function BookingModal({
               <div className="bg-accent/10 rounded-lg p-3">
                 <p className="text-sm font-medium">Стоимость дополнительных услуг:</p>
                 {childSeat !== "none" && <p className="text-xs text-muted-foreground">Детское кресло: +1 000 руб</p>}
-                {petTransport !== "none" && <p className="text-xs text-muted-foreground">Перевозка животного: +{getPetPrice(petTransport)} руб</p>}
+                {petTransport && petTransport !== "none" && (
+                  <p className="text-xs text-muted-foreground">Перевозка животного: +{getPetPrice(petTransport)} руб</p>
+                )}
                 {withDriver && <p className="text-xs text-muted-foreground">Услуги водителя: +{driverBasePrice.toLocaleString()} руб</p>}
                 <p className="text-sm font-medium mt-1">
-                  Итого дополнительно: +{(childSeat !== "none" ? 1000 : 0) + getPetPrice(petTransport) + driverBasePrice} руб / сутки
+                  Итого дополнительно: +{(childSeat !== "none" ? 1000 : 0) + 
+                    (petTransport && petTransport !== "none" ? getPetPrice(petTransport) : 0) + 
+                    driverBasePrice} руб / сутки
                 </p>
               </div>
             )}
