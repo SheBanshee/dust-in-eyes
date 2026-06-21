@@ -71,29 +71,6 @@ export default function SignInPage() {
         </div>
 
         <div className="bg-card border border-border rounded-lg p-6 space-y-6">
-          {/* OAuth buttons */}
-          <div className="space-y-3">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => signIn("yandex", { callbackUrl: "/profile" })}
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.19 15.93V14.4h-.87L9.62 17.93H7.85l3.02-3.87c-1.59-.32-2.59-1.44-2.59-3.16 0-2.15 1.44-3.47 3.65-3.47H14.8v10.5h-1.61zm0-5.83V9.57h-.96c-1.3 0-2.17.72-2.17 1.87 0 1.08.72 1.73 1.96 1.73h1.17v-.07z" />
-              </svg>
-              Войти через Яндекс
-            </Button>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted">или</span>
-            </div>
-          </div>
-
           {/* Credentials form */}
           <form onSubmit={handleCredentials} className="space-y-4">
             {!isLogin && (
