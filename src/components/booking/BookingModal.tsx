@@ -15,41 +15,34 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-// Схема валидации
-const schema = z
-  .object({
-    fullName: z.string().min(2, "Введите ваше ФИО"),
-    phone: z.string()
-      .min(11, "Номер телефона должен содержать 11 цифр")
-      .regex(/^\d+$/, "Номер должен содержать только цифры")
-      .regex(/^[0-9]{11}$/, "Введите 11 цифр (без пробелов и знаков)"),
-    startDate: z.string().min(1, "Выберите дату начала"),
-    endDate: z.string().min(1, "Выберите дату окончания"),
-    withDriver: z.boolean().default(false),
-    pickupAddress: z.string().min(1, "Выберите способ получения автомобиля"),
-    
-    // Паспортные данные
-    passportSeries: z.string().optional(),
-    passportNumber: z.string().optional(),
-    passportIssuedBy: z.string().optional(),
-    
-    // Водительские права
-    licenseSeries: z.string().optional(),
-    licenseNumber: z.string().optional(),
-    licenseCategory: z.string().optional(),
-    
-    // Дополнительные услуги
-    driverGender: z.string().optional(),
-    driverAge: z.string().optional(),
-    driverHours: z.string().optional(),
-    childSeat: z.string().optional(),
-    petTransport: z.string().optional(),
-    driverComment: z.string().optional(),
-  })
-  .refine((data) => new Date(data.endDate) > new Date(data.startDate), {
-    message: "Дата окончания должна быть позже даты начала",
-    path: ["endDate"],
-  });
+// Схема валидации — все поля optional, с default для withDriver
+const schema = z.object({
+  fullName: z.string().min(2, "Введите ваше ФИО"),
+  phone: z.string()
+    .min(11, "Номер телефона должен содержать 11 цифр")
+    .regex(/^\d+$/, "Номер должен содержать только цифры")
+    .regex(/^[0-9]{11}$/, "Введите 11 цифр (без пробелов и знаков)"),
+  startDate: z.string().min(1, "Выберите дату начала"),
+  endDate: z.string().min(1, "Выберите дату окончания"),
+  withDriver: z.boolean().default(false),
+  pickupAddress: z.string().min(1, "Выберите способ получения автомобиля"),
+  
+  passportSeries: z.string().optional(),
+  passportNumber: z.string().optional(),
+  passportIssuedBy: z.string().optional(),
+  licenseSeries: z.string().optional(),
+  licenseNumber: z.string().optional(),
+  licenseCategory: z.string().optional(),
+  driverGender: z.string().optional(),
+  driverAge: z.string().optional(),
+  driverHours: z.string().optional(),
+  childSeat: z.string().optional(),
+  petTransport: z.string().optional(),
+  driverComment: z.string().optional(),
+}).refine((data) => new Date(data.endDate) > new Date(data.startDate), {
+  message: "Дата окончания должна быть позже даты начала",
+  path: ["endDate"],
+});
 
 type FormData = z.infer<typeof schema>;
 
@@ -169,7 +162,8 @@ export default function BookingModal({
       }
       setSubmitted(true);
       reset();
-    } catch {
+    } catch (error) {
+      console.error("Ошибка:", error);
       setServerError("Произошла ошибка. Попробуйте ещё раз.");
     } finally {
       setLoading(false);
