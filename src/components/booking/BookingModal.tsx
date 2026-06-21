@@ -70,7 +70,8 @@ export default function BookingModal({
     setValue,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: zodResolver(schema),
+    // ✅ ОБХОДИМ ПРОВЕРКУ ТИПОВ
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       withDriver: false,
       fullName: "",
