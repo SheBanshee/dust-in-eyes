@@ -70,8 +70,7 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-6 space-y-6">
-          {/* Credentials form */}
+        <div className="bg-card border border-border rounded-lg p-6">
           <form onSubmit={handleCredentials} className="space-y-4">
             {!isLogin && (
               <div>
@@ -111,7 +110,7 @@ export default function SignInPage() {
             </Button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-sm text-muted-foreground mt-4">
             {isLogin ? "Нет аккаунта?" : "Уже есть аккаунт?"}{" "}
             <button
               onClick={() => {
