@@ -15,34 +15,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const schema = z
-  .object({
-    fullName: z.string().min(2, "Введите ваше ФИО"),
-    phone: z.string()
-      .min(11, "Номер телефона должен содержать 11 цифр")
-      .regex(/^\d+$/, "Номер должен содержать только цифры")
-      .regex(/^[0-9]{11}$/, "Введите 11 цифр (без пробелов и знаков)"),
-    startDate: z.string().min(1, "Выберите дату начала"),
-    endDate: z.string().min(1, "Выберите дату окончания"),
-    withDriver: z.boolean().default(false),
-    pickupAddress: z.string().min(1, "Выберите способ получения автомобиля"),
-    passportSeries: z.string().optional(),
-    passportNumber: z.string().optional(),
-    passportIssuedBy: z.string().optional(),
-    licenseSeries: z.string().optional(),
-    licenseNumber: z.string().optional(),
-    licenseCategory: z.string().optional(),
-    driverGender: z.string().optional(),
-    driverAge: z.string().optional(),
-    driverHours: z.string().optional(),
-    childSeat: z.string().optional(),
-    petTransport: z.string().optional(),
-    driverComment: z.string().optional(),
-  })
-  .refine((data) => new Date(data.endDate) > new Date(data.startDate), {
-    message: "Дата окончания должна быть позже даты начала",
-    path: ["endDate"],
-  });
+const schema = z.object({
+  fullName: z.string().min(2, "Введите ваше ФИО"),
+  phone: z.string()
+    .min(11, "Номер телефона должен содержать 11 цифр")
+    .regex(/^\d+$/, "Номер должен содержать только цифры")
+    .regex(/^[0-9]{11}$/, "Введите 11 цифр (без пробелов и знаков)"),
+  startDate: z.string().min(1, "Выберите дату начала"),
+  endDate: z.string().min(1, "Выберите дату окончания"),
+  withDriver: z.boolean().default(false),
+  pickupAddress: z.string().min(1, "Выберите способ получения автомобиля"),
+  passportNumber: z.string().optional(),
+  driverLicense: z.string().optional(),
+  driverGender: z.string().optional(),
+  driverAge: z.string().optional(),
+  driverHours: z.string().optional(),
+  childSeat: z.string().optional(),
+  petTransport: z.string().optional(),
+  driverComment: z.string().optional(),
+});
 
 type FormData = z.infer<typeof schema>;
 
@@ -56,14 +47,6 @@ interface Props {
   carBodyType: string;
   deposit?: number;
 }
-
-const calculateDriverPrice = (driverHours: string): number => {
-  switch (driverHours) {
-    case "full": return 7000;
-    case "extended": return 10000;
-    default: return 5000;
-  }
-};
 
 export default function BookingModal({ 
   open, 
@@ -94,13 +77,9 @@ export default function BookingModal({
       phone: "",
       startDate: "",
       endDate: "",
-      passportSeries: "",
-      passportNumber: "",
-      passportIssuedBy: "",
-      licenseSeries: "",
-      licenseNumber: "",
-      licenseCategory: "",
       pickupAddress: "",
+      passportNumber: "",
+      driverLicense: "",
       driverGender: "any",
       driverAge: "middle",
       driverHours: "standard",
@@ -116,8 +95,6 @@ export default function BookingModal({
   const childSeat = watch("childSeat");
   const petTransport = watch("petTransport");
 
-  const driverBasePrice = withDriver ? calculateDriverPrice(driverHours || "standard") : 0;
-
   const getPetPrice = (pet: string): number => {
     switch (pet) {
       case "small": return 1500;
@@ -126,6 +103,15 @@ export default function BookingModal({
       default: return 0;
     }
   };
+
+  const driverBasePrice = (() => {
+    if (!withDriver) return 0;
+    switch (driverHours) {
+      case "full": return 7000;
+      case "extended": return 10000;
+      default: return 5000;
+    }
+  })();
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
@@ -138,7 +124,7 @@ export default function BookingModal({
         fullName: data.fullName,
         phone: data.phone,
         passportNumber: data.passportNumber || null,
-        driverLicense: data.licenseNumber || null,
+        driverLicense: data.driverLicense || null,
         withDriver: data.withDriver || false,
         pickupAddress: data.pickupAddress || null,
         driverGender: data.driverGender || null,
@@ -256,10 +242,7 @@ export default function BookingModal({
                   {maxChildSeats === 0 ? (
                     <p className="text-red-500 text-xs">В данный автомобиль невозможно установить детское кресло (2-местный спорткар)</p>
                   ) : (
-                    <select
-                      className="w-full text-sm rounded-md border border-border bg-background p-2"
-                      {...register("childSeat")}
-                    >
+                    <select className="w-full text-sm rounded-md border border-border bg-background p-2" {...register("childSeat")}>
                       <option value="none">Нет</option>
                       <option value="infant">До 1 года (люлька) — +1 000 руб</option>
                       <option value="toddler">1-3 года — +1 000 руб</option>
@@ -271,10 +254,7 @@ export default function BookingModal({
 
                 <div>
                   <label className="text-sm font-medium block mb-2">Перевозка животных</label>
-                  <select
-                    className="w-full text-sm rounded-md border border-border bg-background p-2"
-                    {...register("petTransport")}
-                  >
+                  <select className="w-full text-sm rounded-md border border-border bg-background p-2" {...register("petTransport")}>
                     <option value="none">Нет</option>
                     <option value="small">Мелкая порода (до 5 кг) — +1 500 руб</option>
                     <option value="medium">Средняя порода (5-15 кг) — +2 000 руб</option>
@@ -347,10 +327,7 @@ export default function BookingModal({
 
                     <div>
                       <label className="text-sm font-medium block mb-2">Особые пожелания к водителю</label>
-                      <Input 
-                        placeholder="Дополнительные требования к водителю"
-                        {...register("driverComment")}
-                      />
+                      <Input placeholder="Дополнительные требования к водителю" {...register("driverComment")} />
                     </div>
                   </div>
                 )}
@@ -395,32 +372,18 @@ export default function BookingModal({
             {(childSeat !== "none" || petTransport !== "none" || withDriver) && (
               <div className="bg-accent/10 rounded-lg p-3">
                 <p className="text-sm font-medium">Стоимость дополнительных услуг:</p>
-                {childSeat !== "none" && (
-                  <p className="text-xs text-muted-foreground">Детское кресло: +1 000 руб</p>
-                )}
-                {petTransport !== "none" && (
-                  <p className="text-xs text-muted-foreground">
-                    Перевозка животного: +{getPetPrice(petTransport)} руб
-                  </p>
-                )}
-                {withDriver && (
-                  <p className="text-xs text-muted-foreground">
-                    Услуги водителя: +{driverBasePrice.toLocaleString()} руб
-                  </p>
-                )}
+                {childSeat !== "none" && <p className="text-xs text-muted-foreground">Детское кресло: +1 000 руб</p>}
+                {petTransport !== "none" && <p className="text-xs text-muted-foreground">Перевозка животного: +{getPetPrice(petTransport)} руб</p>}
+                {withDriver && <p className="text-xs text-muted-foreground">Услуги водителя: +{driverBasePrice.toLocaleString()} руб</p>}
                 <p className="text-sm font-medium mt-1">
-                  Итого дополнительно: +{(childSeat !== "none" ? 1000 : 0) + 
-                    getPetPrice(petTransport) + 
-                    driverBasePrice} руб / сутки
+                  Итого дополнительно: +{(childSeat !== "none" ? 1000 : 0) + getPetPrice(petTransport) + driverBasePrice} руб / сутки
                 </p>
               </div>
             )}
 
             <div className="bg-accent/5 rounded-lg p-3 text-sm">
               <p className="font-medium">Залог: {deposit.toLocaleString()} руб</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Возвращается после осмотра автомобиля при его возврате.
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Возвращается после осмотра автомобиля при его возврате.</p>
             </div>
 
             {serverError && (
