@@ -57,7 +57,7 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// ===== МОДЕЛЬ IMAGE ДО CAR =====
+// ===== МОДЕЛЬ IMAGE =====
 model Image {
   id        Int      @id @default(autoincrement())
   url       String
@@ -89,7 +89,7 @@ model Car {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   bookings     Booking[]
-  images       Image[]    // ← ТЕПЕРЬ МОДЕЛЬ Image СУЩЕСТВУЕТ
+  images       Image[]
 }
 
 model Booking {
