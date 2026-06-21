@@ -1,3 +1,4 @@
+// components/booking/BookingModal.tsx
 "use client";
 
 import { useState } from "react";
@@ -14,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+// Схема валидации
 const schema = z
   .object({
     fullName: z.string().min(2, "Введите ваше ФИО"),
@@ -21,63 +23,22 @@ const schema = z
       .min(11, "Номер телефона должен содержать 11 цифр")
       .regex(/^\d+$/, "Номер должен содержать только цифры")
       .regex(/^[0-9]{11}$/, "Введите 11 цифр (без пробелов и знаков)"),
-    
-    // Паспортные данные
-    passportSeries: z
-      .string()
-      .optional()
-      .refine((val) => !val || /^[\d\s]*$/.test(val), {
-        message: "Серия паспорта должна содержать только цифры",
-      })
-      .refine((val) => !val || val.replace(/\s/g, "").length === 4, {
-        message: "Серия паспорта должна содержать 4 цифры",
-      }),
-    passportNumber: z
-      .string()
-      .optional()
-      .refine((val) => !val || /^[\d\s]*$/.test(val), {
-        message: "Номер паспорта должен содержать только цифры",
-      })
-      .refine((val) => !val || val.replace(/\s/g, "").length === 6, {
-        message: "Номер паспорта должна содержать 6 цифр",
-      }),
-    passportIssuedBy: z
-      .string()
-      .optional()
-      .refine((val) => !val || /^[а-яА-ЯёЁ\s\-.,]*$/.test(val), {
-        message: "Кем выдан — только русские буквы",
-      }),
-
-    // Водительские права
-    licenseSeries: z
-      .string()
-      .optional()
-      .refine((val) => !val || /^[\d\s]*$/.test(val), {
-        message: "Серия прав должна содержать только цифры",
-      })
-      .refine((val) => !val || val.replace(/\s/g, "").length === 4, {
-        message: "Серия прав должна содержать 4 цифры",
-      }),
-    licenseNumber: z
-      .string()
-      .optional()
-      .refine((val) => !val || /^[\d\s]*$/.test(val), {
-        message: "Номер прав должен содержать только цифры",
-      })
-      .refine((val) => !val || val.replace(/\s/g, "").length === 6, {
-        message: "Номер прав должна содержать 6 цифр",
-      }),
-    licenseCategory: z
-      .string()
-      .optional()
-      .refine((val) => !val || /^[A-Za-zА-Яа-я]*$/.test(val), {
-        message: "Категория — только буквы (A, B, C, D, E)",
-      }),
-
     startDate: z.string().min(1, "Выберите дату начала"),
     endDate: z.string().min(1, "Выберите дату окончания"),
-    withDriver: z.boolean().optional().default(false),
+    withDriver: z.boolean().default(false),
     pickupAddress: z.string().min(1, "Выберите способ получения автомобиля"),
+    
+    // Паспортные данные
+    passportSeries: z.string().optional(),
+    passportNumber: z.string().optional(),
+    passportIssuedBy: z.string().optional(),
+    
+    // Водительские права
+    licenseSeries: z.string().optional(),
+    licenseNumber: z.string().optional(),
+    licenseCategory: z.string().optional(),
+    
+    // Дополнительные услуги
     driverGender: z.string().optional(),
     driverAge: z.string().optional(),
     driverHours: z.string().optional(),
@@ -177,20 +138,28 @@ export default function BookingModal({
     setLoading(true);
     setServerError(null);
     try {
-      // Собираем паспортные данные в одну строку для API
-      const passportData = `${data.passportSeries || ""} ${data.passportNumber || ""} ${data.passportIssuedBy || ""}`.trim();
-      const licenseData = `${data.licenseSeries || ""} ${data.licenseNumber || ""} ${data.licenseCategory || ""}`.trim();
-      
       const payload = {
-        ...data,
-        passportNumber: passportData,
-        driverLicense: licenseData,
+        carId,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        fullName: data.fullName,
+        phone: data.phone,
+        passportNumber: data.passportNumber || null,
+        driverLicense: data.licenseNumber || null,
+        withDriver: data.withDriver || false,
+        pickupAddress: data.pickupAddress || null,
+        driverGender: data.driverGender || null,
+        driverAge: data.driverAge || null,
+        driverHours: data.driverHours || null,
+        childSeat: data.childSeat || null,
+        petTransport: data.petTransport || null,
+        driverComment: data.driverComment || null,
       };
       
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, carId }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -249,6 +218,7 @@ export default function BookingModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Личные данные */}
             <div className="border-b border-border pb-3">
               <h3 className="font-semibold mb-3">Личные данные</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -267,64 +237,9 @@ export default function BookingModal({
                   {errors.phone && <p className="text-destructive text-xs mt-1">{errors.phone.message}</p>}
                 </div>
               </div>
-
-              {/* Паспортные данные - 3 отдельных поля */}
-              <div className="mt-4">
-                <h4 className="text-sm font-medium mb-2 text-accent">Паспортные данные</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Серия</label>
-                    <Input placeholder="12 34" {...register("passportSeries")} />
-                    {errors.passportSeries && (
-                      <p className="text-destructive text-xs mt-1">{errors.passportSeries.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Номер</label>
-                    <Input placeholder="567890" {...register("passportNumber")} />
-                    {errors.passportNumber && (
-                      <p className="text-destructive text-xs mt-1">{errors.passportNumber.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Кем выдан</label>
-                    <Input placeholder="ОВД г. Москвы" {...register("passportIssuedBy")} />
-                    {errors.passportIssuedBy && (
-                      <p className="text-destructive text-xs mt-1">{errors.passportIssuedBy.message}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Водительские права - 3 отдельных поля */}
-              <div className="mt-4">
-                <h4 className="text-sm font-medium mb-2 text-accent">Водительские права</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Серия</label>
-                    <Input placeholder="12 34" {...register("licenseSeries")} />
-                    {errors.licenseSeries && (
-                      <p className="text-destructive text-xs mt-1">{errors.licenseSeries.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Номер</label>
-                    <Input placeholder="567890" {...register("licenseNumber")} />
-                    {errors.licenseNumber && (
-                      <p className="text-destructive text-xs mt-1">{errors.licenseNumber.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Категория</label>
-                    <Input placeholder="B" {...register("licenseCategory")} />
-                    {errors.licenseCategory && (
-                      <p className="text-destructive text-xs mt-1">{errors.licenseCategory.message}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
             </div>
 
+            {/* Период аренды */}
             <div className="border-b border-border pb-3">
               <h3 className="font-semibold mb-3">Период аренды</h3>
               <div className="grid grid-cols-2 gap-4">
@@ -341,6 +256,7 @@ export default function BookingModal({
               </div>
             </div>
 
+            {/* Дополнительные услуги */}
             <div className="border-b border-border pb-3">
               <h3 className="font-semibold mb-3">Дополнительные услуги</h3>
               <div className="space-y-4">
@@ -349,21 +265,16 @@ export default function BookingModal({
                   {maxChildSeats === 0 ? (
                     <p className="text-red-500 text-xs">В данный автомобиль невозможно установить детское кресло (2-местный спорткар)</p>
                   ) : (
-                    <>
-                      <select
-                        className="w-full text-sm rounded-md border border-border bg-background p-2"
-                        {...register("childSeat")}
-                      >
-                        <option value="none">Нет</option>
-                        <option value="infant">До 1 года (люлька) — +1 000 руб</option>
-                        <option value="toddler">1-3 года — +1 000 руб</option>
-                        <option value="child">4-7 лет — +1 000 руб</option>
-                        <option value="booster">7-12 лет (бустер) — +1 000 руб</option>
-                      </select>
-                      {isTwoDoorCoupe && (
-                        <p className="text-yellow-500 text-xs mt-1">Для установки детского кресла потребуется откинуть переднее сиденье</p>
-                      )}
-                    </>
+                    <select
+                      className="w-full text-sm rounded-md border border-border bg-background p-2"
+                      {...register("childSeat")}
+                    >
+                      <option value="none">Нет</option>
+                      <option value="infant">До 1 года (люлька) — +1 000 руб</option>
+                      <option value="toddler">1-3 года — +1 000 руб</option>
+                      <option value="child">4-7 лет — +1 000 руб</option>
+                      <option value="booster">7-12 лет (бустер) — +1 000 руб</option>
+                    </select>
                   )}
                 </div>
 
