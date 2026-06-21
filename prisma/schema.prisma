@@ -79,6 +79,7 @@ model Car {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   bookings     Booking[]
+  images       Image[]    // ← СВЯЗЬ С ИЗОБРАЖЕНИЯМИ
 }
 
 model Booking {
@@ -112,6 +113,16 @@ model Consultation {
   status    ConsultationStatus   @default(NEW)
   createdAt DateTime             @default(now())
   updatedAt DateTime             @updatedAt
+}
+
+// ===== НОВАЯ МОДЕЛЬ IMAGE =====
+model Image {
+  id        Int      @id @default(autoincrement())
+  url       String   // Путь к изображению
+  carId     Int      // Связь с автомобилем
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
 }
 
 enum Role {
