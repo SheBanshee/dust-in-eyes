@@ -1,48 +1,61 @@
-// src/app/api/cars/[id]/available/route.ts
-
+// app/api/cars/[id]/available/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
-  const { searchParams } = new URL(req.url);
-  const startDate = searchParams.get("startDate");
-  const endDate = searchParams.get("endDate");
+  try {
+    const session = await auth();
+    if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
+      return NextResponse.json({ error: "Нет доступа" }, { status: 403 });
+    }
 
-  if (!startDate || !endDate) {
+    // Правильно получаем params с поддержкой Promise
+    const params = await context.params;
+    const id = params.id;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID автомобиля не указан" },
+        { status: 400 }
+      );
+    }
+
+    const carId = parseInt(id);
+    if (isNaN(carId)) {
+      return NextResponse.json(
+        { error: "Некорректный ID автомобиля" },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем бронирования, которые пересекаются с текущей датой
+    const now = new Date();
+    const activeBookings = await prisma.booking.findMany({
+      where: {
+        carId: carId,
+        status: { in: ["CONFIRMED", "IN_PROGRESS"] },
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+    });
+
+    const isAvailable = activeBookings.length === 0;
+
+    return NextResponse.json({
+      available: isAvailable,
+      carId: carId,
+      startDate: now,
+      endDate: now,
+    });
+  } catch (error) {
+    console.error("Ошибка проверки доступности:", error);
     return NextResponse.json(
-      { error: "Укажите startDate и endDate" },
-      { status: 400 }
+      { error: "Ошибка при проверке доступности автомобиля" },
+      { status: 500 }
     );
   }
-
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-
-  const carId = parseInt(params.id);
-
-  // Проверяем пересечение с существующими бронированиями
-  const existingBooking = await prisma.booking.findFirst({
-    where: {
-      carId,
-      status: { notIn: ["CANCELLED", "COMPLETED"] },
-      OR: [
-        {
-          AND: [
-            { startDate: { lte: end } },
-            { endDate: { gte: start } },
-          ],
-        },
-      ],
-    },
-  });
-
-  return NextResponse.json({
-    available: !existingBooking,
-    carId,
-    startDate: start,
-    endDate: end,
-  });
 }
