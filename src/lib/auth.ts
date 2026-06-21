@@ -2,8 +2,6 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
-// import Yandex from "next-auth/providers/yandex";
-// import VK from "next-auth/providers/vk";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
@@ -43,15 +41,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
-    // Яндекс и VK временно отключены
-    // ...(process.env.AUTH_YANDEX_ID && process.env.AUTH_YANDEX_SECRET
-    //   ? [
-    //       Yandex({
-    //         clientId: process.env.AUTH_YANDEX_ID,
-    //         clientSecret: process.env.AUTH_YANDEX_SECRET,
-    //       }),
-    //     ]
-    //   : []),
   ],
   callbacks: {
     async jwt({ token, user }) {
