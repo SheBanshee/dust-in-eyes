@@ -1,62 +1,61 @@
+// components/cars/CarCard.tsx
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
-import type { Car } from "@/types";
 
 interface Props {
-  car: Car;
+  car: any;
   index?: number;
 }
 
-export default function CarCard({ car, index = 0 }: Props) {
-  const primaryImage = car.images?.find((img) => img.isPrimary) || car.images?.[0];
+const getCarImage = (brand: string, model: string): string => {
+  const images: Record<string, string> = {
+    "BMW-520d": "/cars/BMW520d.png",
+    "BMW-X5 M50d": "/cars/BMWX5.png",        
+    "Mercedes-Benz-S-Class W223": "/cars/MercedesSClass.png",
+    "Mercedes-Benz-G63 AMG": "/cars/MercedesBenzG63.png",
+    "Porsche-911 Carrera S": "/cars/Porsche911.png",
+    "Porsche-Cayenne Turbo": "/cars/PorscheCayenne.png",
+    "Maserati-Ghibli": "/cars/MaseratiGhibli.png",
+    "Audi-RS6 Avant": "/cars/AudiRS6.png",
+    "Ferrari-Roma": "/cars/FerrariRoma.png",
+    "Lamborghini-Huracán EVO": "/cars/LamborghiniHuracan.png",
+    "Range Rover-Autobiography": "/cars/RangeRover.png",
+    "Rolls-Royce-Ghost": "/cars/RollsRoyceGhost.png",
+  };
+  
+  const key = `${brand}-${model}`;
+  return images[key] || "https://cdn-icons-png.flaticon.com/512/3096/3096980.png";
+};
+
+export default function CarCard({ car }: Props) {
+  const imageUrl = getCarImage(car.brand, car.model);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="group bg-card border border-border rounded-lg overflow-hidden hover:border-accent/50 transition-all duration-300"
-    >
-      <div className="relative aspect-[16/10] overflow-hidden">
+    <div className="bg-card border border-border rounded-lg overflow-hidden hover:border-accent/50 transition-all">
+      <div className="relative aspect-[16/10] bg-card">
         <Image
-          src={primaryImage?.url || "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80"}
+          src={imageUrl}
           alt={`${car.brand} ${car.model}`}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-contain p-4"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-3 left-3 right-3">
-          <p className="text-white font-bold text-lg">
-            {car.brand} {car.model}
-          </p>
-        </div>
       </div>
       <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="text-xs text-muted-foreground space-x-2">
-            <span>{car.year}</span>
-            <span>·</span>
-            <span>{car.horsepower} л.с.</span>
-            <span>·</span>
-            <span>{car.fuelType}</span>
-          </div>
+        <h3 className="font-bold text-lg">{car.brand} {car.model}</h3>
+        <div className="text-sm text-muted-foreground mb-2">
+          {car.year} · {car.horsepower} л.с. · {car.fuelType}
         </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-accent font-bold text-xl">{formatPrice(car.pricePerDay)}</span>
-            <span className="text-muted text-sm"> / сутки</span>
-          </div>
+        <div className="flex justify-between items-center">
+          <span className="text-accent font-bold">{formatPrice(car.pricePerDay)}/сут</span>
           <Link href={`/fleet/${car.id}`}>
             <Button size="sm">Подробнее</Button>
           </Link>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

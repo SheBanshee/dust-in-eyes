@@ -1,51 +1,58 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const BRANDS = [
-  "Все", "BMW", "Mercedes-Benz", "Porsche", "Rolls-Royce", "Ferrari",
-  "Maserati", "Audi", "Range Rover", "Lamborghini",
-];
+interface Props {
+  brands: string[];
+}
 
-const FUEL_TYPES = ["Все", "Бензин", "Дизель"];
-const DRIVETRAINS = ["Все", "Задний", "Полный", "Передний"];
+const FUEL_TYPES = ["Бензин", "Дизель"];
+const DRIVETRAINS = ["Задний", "Полный", "Передний"];
 
-export default function CarFilters() {
+export default function CarFilters({ brands }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [brand, setBrand] = useState(searchParams.get("brand") || "Все");
-  const [fuel, setFuel] = useState(searchParams.get("fuel") || "Все");
-  const [drivetrain, setDrivetrain] = useState(searchParams.get("drivetrain") || "Все");
+  const [brand, setBrand] = useState(searchParams.get("brand") || "");
+  const [fuel, setFuel] = useState(searchParams.get("fuel") || "");
+  const [drivetrain, setDrivetrain] = useState(searchParams.get("drivetrain") || "");
   const [priceMin, setPriceMin] = useState(searchParams.get("priceMin") || "");
   const [priceMax, setPriceMax] = useState(searchParams.get("priceMax") || "");
   const [showFilters, setShowFilters] = useState(false);
 
-  const applyFilters = useCallback(() => {
+  const applyFilters = () => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
-    if (brand !== "Все") params.set("brand", brand);
-    if (fuel !== "Все") params.set("fuel", fuel);
-    if (drivetrain !== "Все") params.set("drivetrain", drivetrain);
+    if (brand) params.set("brand", brand);
+    if (fuel) params.set("fuel", fuel);
+    if (drivetrain) params.set("drivetrain", drivetrain);
     if (priceMin) params.set("priceMin", priceMin);
     if (priceMax) params.set("priceMax", priceMax);
     router.push(`/fleet?${params.toString()}`);
-  }, [search, brand, fuel, drivetrain, priceMin, priceMax, router]);
+  };
 
   const resetFilters = () => {
     setSearch("");
-    setBrand("Все");
-    setFuel("Все");
-    setDrivetrain("Все");
+    setBrand("");
+    setFuel("");
+    setDrivetrain("");
     setPriceMin("");
     setPriceMax("");
     router.push("/fleet");
   };
+
+  useEffect(() => {
+    setBrand(searchParams.get("brand") || "");
+    setFuel(searchParams.get("fuel") || "");
+    setDrivetrain(searchParams.get("drivetrain") || "");
+    setPriceMin(searchParams.get("priceMin") || "");
+    setPriceMax(searchParams.get("priceMax") || "");
+  }, [searchParams]);
 
   return (
     <div className="mb-8 space-y-4">
@@ -79,9 +86,10 @@ export default function CarFilters() {
               <select
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
-                className="w-full h-10 rounded-md border border-border bg-input px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-10 rounded-md border border-border bg-input px-3 text-sm"
               >
-                {BRANDS.map((b) => (
+                <option value="">Все марки</option>
+                {brands.map((b) => (
                   <option key={b} value={b}>{b}</option>
                 ))}
               </select>
@@ -91,8 +99,9 @@ export default function CarFilters() {
               <select
                 value={fuel}
                 onChange={(e) => setFuel(e.target.value)}
-                className="w-full h-10 rounded-md border border-border bg-input px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-10 rounded-md border border-border bg-input px-3 text-sm"
               >
+                <option value="">Все</option>
                 {FUEL_TYPES.map((f) => (
                   <option key={f} value={f}>{f}</option>
                 ))}
@@ -103,8 +112,9 @@ export default function CarFilters() {
               <select
                 value={drivetrain}
                 onChange={(e) => setDrivetrain(e.target.value)}
-                className="w-full h-10 rounded-md border border-border bg-input px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-10 rounded-md border border-border bg-input px-3 text-sm"
               >
+                <option value="">Все</option>
                 {DRIVETRAINS.map((d) => (
                   <option key={d} value={d}>{d}</option>
                 ))}

@@ -50,29 +50,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }),
         ]
       : []),
-    ...(process.env.AUTH_VK_ID
-      ? [
-          VK({
-            clientId: process.env.AUTH_VK_ID,
-            clientSecret: process.env.AUTH_VK_SECRET,
-          }),
-        ]
-      : []),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = (user as { role?: string }).role || "USER";
-        token.id = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        (session.user as { role?: string }).role = token.role as string;
-      }
-      return session;
-    },
+callbacks: {
+  async jwt({ token, user }) {
+    if (user) {
+      token.role = (user as { role?: string }).role || "USER";
+      token.id = user.id;
+    }
+    return token;
   },
+  async session({ session, token }) {
+    if (session.user) {
+      session.user.id = token.id as string;
+      (session.user as { role?: string }).role = token.role as string;
+    }
+    return session;
+  },
+},
 });

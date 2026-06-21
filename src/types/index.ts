@@ -1,11 +1,3 @@
-export interface CarImage {
-  id: number;
-  carId: number;
-  url: string;
-  isPrimary: boolean;
-  displayOrder: number;
-}
-
 export interface Car {
   id: number;
   brand: string;
@@ -19,8 +11,8 @@ export interface Car {
   pricePerDay: number;
   description: string;
   available: boolean;
-  images: CarImage[];
   videoUrl?: string | null;
+  screenshot?: string | null;
 }
 
 export interface Booking {

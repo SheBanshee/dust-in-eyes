@@ -15,8 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const schema = z.object({
-  name: z.string().min(2, "Введите ваше имя"),
-  phone: z.string().min(11, "Введите корректный номер телефона"),
+  name: z
+    .string()
+    .min(2, "Введите ваше имя")
+    .regex(/^[а-яА-ЯёЁ\s]*$/, "Имя должно содержать только русские буквы и пробелы"),
+  phone: z
+    .string()
+    .min(11, "Номер телефона должен содержать 11 цифр")
+    .regex(/^\d+$/, "Номер должен содержать только цифры")
+    .regex(/^[0-9]{11}$/, "Введите 11 цифр (без пробелов и знаков)"),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -37,16 +44,27 @@ export default function ConsultationModal({ open, onOpenChange }: Props) {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      name: "",
+      phone: "",
+    },
   });
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      await fetch("/api/consultations", {
+      const res = await fetch("/api/consultations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || "Ошибка при отправке");
+        return;
+      }
+
       setSubmitted(true);
       reset();
     } catch {
@@ -70,10 +88,10 @@ export default function ConsultationModal({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle>Получите консультацию</DialogTitle>
           <DialogDescription>
-            Заполните ваши данные ниже. Наш менеджер свяжется с вами в течение 30 минут,
-            проконсультирует и поможет оформить бронирование.
+            Заполните ваши данные ниже. Наш менеджер свяжется с вами в течение 30 минут.
           </DialogDescription>
         </DialogHeader>
+
         {submitted ? (
           <div className="text-center py-6">
             <p className="text-accent font-semibold text-lg mb-2">Заявка отправлена!</p>
@@ -85,18 +103,27 @@ export default function ConsultationModal({ open, onOpenChange }: Props) {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Ваше имя</label>
-              <Input placeholder="Иван" {...register("name")} />
+              <Input
+                placeholder="Иван"
+                {...register("name")}
+              />
               {errors.name && (
                 <p className="text-destructive text-xs mt-1">{errors.name.message}</p>
               )}
             </div>
+
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Телефон</label>
-              <Input placeholder="+7 (999) 123-45-67" {...register("phone")} />
+              <Input
+                type="tel"
+                placeholder="91234567890"
+                {...register("phone")}
+              />
               {errors.phone && (
                 <p className="text-destructive text-xs mt-1">{errors.phone.message}</p>
               )}
             </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Отправка..." : "Получить консультацию"}
             </Button>

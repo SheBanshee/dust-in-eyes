@@ -7,9 +7,18 @@ import BookingModal from "@/components/booking/BookingModal";
 interface Props {
   carId: number;
   carName: string;
+  carSeats: number;
+  carDoors: number;
+  carBodyType: string;
 }
 
-export default function CarDetailClient({ carId, carName }: Props) {
+export default function CarDetailClient({ 
+  carId, 
+  carName, 
+  carSeats, 
+  carDoors, 
+  carBodyType 
+}: Props) {
   const [bookingOpen, setBookingOpen] = useState(false);
 
   return (
@@ -22,6 +31,10 @@ export default function CarDetailClient({ carId, carName }: Props) {
         onOpenChange={setBookingOpen}
         carId={carId}
         carName={carName}
+        carSeats={carSeats}
+        carDoors={carDoors}
+        carBodyType={carBodyType}
+        deposit={10000}
       />
     </>
   );

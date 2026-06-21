@@ -68,51 +68,70 @@ model Car {
   drivetrain   String
   engineVolume Float
   pricePerDay  Int
+  deposit      Int?       @default(10000)
   description  String
   videoUrl     String?
   available    Boolean    @default(true)
+  bodyType     String     @default("sedan")
+  doors        Int        @default(4)
+  color        String?    @default("Белый")
+  screenshot   String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   bookings     Booking[]
-  images       CarImage[]
-}
-
-model CarImage {
-  id           Int     @id @default(autoincrement())
-  carId        Int
-  url          String
-  isPrimary    Boolean @default(false)
-  displayOrder Int     @default(0)
-  car          Car     @relation(fields: [carId], references: [id], onDelete: Cascade)
 }
 
 model Booking {
-  id        Int           @id @default(autoincrement())
-  userId    String?
-  carId     Int
-  startDate DateTime
-  endDate   DateTime
-  phone     String
-  status    BookingStatus @default(PENDING)
-  createdAt DateTime      @default(now())
-  car       Car           @relation(fields: [carId], references: [id], onDelete: Cascade)
-  user      User?         @relation(fields: [userId], references: [id])
+  id             Int           @id @default(autoincrement())
+  userId         String?
+  carId          Int
+  startDate      DateTime
+  endDate        DateTime
+  fullName       String?
+  phone          String
+  passportNumber String?
+  driverLicense  String?
+  withDriver     Boolean       @default(false)
+  pickupAddress  String?
+  driverGender   String?
+  driverAge      String?
+  driverHours    String?
+  childSeat      String?
+  petTransport   String?
+  driverComment  String?
+  status         BookingStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  car            Car           @relation(fields: [carId], references: [id], onDelete: Cascade)
+  user           User?         @relation(fields: [userId], references: [id])
 }
 
 model Consultation {
-  id        Int      @id @default(autoincrement())
+  id        Int                  @id @default(autoincrement())
   name      String
   phone     String
-  createdAt DateTime @default(now())
+  status    ConsultationStatus   @default(NEW)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 }
 
 enum Role {
   USER
+  MANAGER
   ADMIN
 }
 
 enum BookingStatus {
   PENDING
   CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ConsultationStatus {
+  NEW
+  IN_PROGRESS
+  COMPLETED
+  NO_ANSWER
   CANCELLED
 }
