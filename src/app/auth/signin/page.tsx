@@ -123,6 +123,11 @@ export default function SignInPage() {
               {isLogin ? "Зарегистрироваться" : "Войти"}
             </button>
           </p>
+          {isLogin && (
+            <p className="text-center text-xs text-muted-foreground mt-3">
+              Демо-админ: любой email, пароль <span className="text-accent">admin123</span>
+            </p>
+          )}
         </div>
       </div>
     </div>
