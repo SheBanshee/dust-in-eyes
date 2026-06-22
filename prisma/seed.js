@@ -1,3 +1,9 @@
+require("dotenv").config();
+
+if (process.env.DATABASE_URL_UNPOOLED) {
+  process.env.DATABASE_URL = process.env.DATABASE_URL_UNPOOLED;
+}
+
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
@@ -213,11 +219,6 @@ const cars = [
 async function main() {
   console.log("Seeding database...");
 
-  // ===== ОЧИСТКА ПЕРЕД ЗАПОЛНЕНИЕМ (НАВСЕГДА УБИРАЕТ ДУБЛИ) =====
-  await prisma.booking.deleteMany();
-  await prisma.car.deleteMany();
-  await prisma.user.deleteMany();
-
   const hashedPassword = await bcrypt.hash("admin123", 10);
   await prisma.user.upsert({
     where: { email: "admin@dustineyes.ru" },
@@ -246,6 +247,13 @@ async function main() {
 
   for (const carData of cars) {
     const { screenshot, ...carInfo } = carData;
+    const existing = await prisma.car.findFirst({
+      where: { brand: carInfo.brand, model: carInfo.model },
+    });
+    if (existing) {
+      console.log(`Skipped car: ${carInfo.brand} ${carInfo.model} (already exists)`);
+      continue;
+    }
     const car = await prisma.car.create({ data: carInfo });
     console.log(`Created car: ${car.brand} ${car.model} (${car.color})`);
   }

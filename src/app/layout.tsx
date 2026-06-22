@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: "Пыль в глаза — Аренда премиальных автомобилей в Москве",
   description:
     "Аренда автомобилей премиум-класса в Москве. Rolls-Royce, Ferrari, Porsche, BMW, Mercedes-Benz и другие.",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({
