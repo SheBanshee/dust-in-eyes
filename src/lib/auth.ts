@@ -19,26 +19,53 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Пароль", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        try {
+          console.log("1. Начало authorize");
+          
+          if (!credentials?.email || !credentials?.password) {
+            console.log("2. Нет email или пароля");
+            return null;
+          }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        });
+          console.log("3. Ищем пользователя:", credentials.email);
+          
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email as string },
+          });
 
-        if (!user || !user.password) return null;
+          console.log("4. Найден пользователь?", !!user);
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-        if (!isValid) return null;
+          if (!user || !user.password) {
+            console.log("5. Пользователь не найден или нет пароля");
+            return null;
+          }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        };
+          console.log("6. Сравниваем пароли...");
+          
+          const isValid = await bcrypt.compare(
+            credentials.password as string,
+            user.password
+          );
+          
+          console.log("7. Пароль верный?", isValid);
+
+          if (!isValid) {
+            console.log("8. Неверный пароль");
+            return null;
+          }
+
+          console.log("9. Успешный вход!");
+          
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          };
+        } catch (error) {
+          console.error("Ошибка в authorize:", error);
+          return null;
+        }
       },
     }),
   ],
