@@ -99,7 +99,7 @@ export default function Header() {
                         </Link>
                       )}
                       <button
-                        onClick={() => signOut()}
+                        onClick={() => signOut({ callbackUrl: "/" })}
                         className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-card-hover transition-colors w-full text-left cursor-pointer"
                       >
                         <LogOut className="w-4 h-4" />
@@ -174,7 +174,7 @@ export default function Header() {
                 </Link>
               )}
               <button
-                onClick={() => signOut()}
+                onClick={() => signOut({ callbackUrl: "/" })}
                 className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2 cursor-pointer"
               >
                 Выйти

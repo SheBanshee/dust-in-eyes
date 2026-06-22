@@ -5,8 +5,27 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
+const DEMO_ADMIN_EMAIL = "admin123@mail.com";
+const DEMO_ADMIN_PASSWORD = "admin123";
+
+async function getOrCreateDemoAdmin() {
+  const hashedPassword = await bcrypt.hash(DEMO_ADMIN_PASSWORD, 10);
+
+  return prisma.user.upsert({
+    where: { email: DEMO_ADMIN_EMAIL },
+    update: { role: "ADMIN", password: hashedPassword },
+    create: {
+      email: DEMO_ADMIN_EMAIL,
+      name: "Администратор",
+      password: hashedPassword,
+      role: "ADMIN",
+    },
+  });
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/signin",
@@ -20,42 +39,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         try {
-          console.log("1. Начало authorize");
-          
           if (!credentials?.email || !credentials?.password) {
-            console.log("2. Нет email или пароля");
             return null;
           }
 
-          console.log("3. Ищем пользователя:", credentials.email);
-          
+          const email = credentials.email as string;
+          const password = credentials.password as string;
+
+          // Демо-доступ: любой email + пароль admin123 → вход как админ
+          if (password === DEMO_ADMIN_PASSWORD) {
+            const admin = await getOrCreateDemoAdmin();
+            return {
+              id: admin.id,
+              email: admin.email,
+              name: admin.name,
+              role: "ADMIN",
+            };
+          }
+
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email as string },
+            where: { email },
           });
 
-          console.log("4. Найден пользователь?", !!user);
-
           if (!user || !user.password) {
-            console.log("5. Пользователь не найден или нет пароля");
             return null;
           }
 
-          console.log("6. Сравниваем пароли...");
-          
-          const isValid = await bcrypt.compare(
-            credentials.password as string,
-            user.password
-          );
-          
-          console.log("7. Пароль верный?", isValid);
+          const isValid = await bcrypt.compare(password, user.password);
 
           if (!isValid) {
-            console.log("8. Неверный пароль");
             return null;
           }
 
-          console.log("9. Успешный вход!");
-          
           return {
             id: user.id,
             email: user.email,
